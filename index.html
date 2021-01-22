@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>MIDI Juggler</title>
+		<link rel="icon" href="https://emojimage.toad.cz/🤹" />
+		<style>
+body {
+	font-family: sans-serif;
+}
+
+main {
+	max-width: 600px;
+	margin: auto;
+}
+
+h1 {
+	text-align: center;
+	font-size: 800%;
+	margin: .2em 0;
+}
+
+li {
+	margin: .5em 0;
+}
+
+li:last-child {
+	text-decoration: line-through;
+	opacity: 0.5;
+}
+
+table {
+	margin-top: 2em;
+}
+
+select, [type=range] {
+	width: 300px;
+}
+
+footer {
+	margin-top: 5em;
+	border-top: 1px solid gray;
+	padding-top: 1em;
+	text-align: center;
+	font-size: 70%;
+}
+		</style>
+	</head>
+	<body>
+		<main>
+		<h1 title="MIDI Juggler">🎶🤹</h1>
+		<p>How to use:</p>
+
+		<ol>
+			<li>Connect your MIDI input and output device(s)</li>
+			<li>(Re)load this page in a browser that supports <a href="https://caniuse.com/midi">Web MIDI</a> <span id="detect"></span></li>
+			<li>Pick input and output devices from selectboxes below</li>
+			<li>Adjust the transposition slider</li>
+			<li>Play!</li>
+			<li>Profit!</li>
+		</ol>
+
+		<table>
+			<tr>
+				<td><label for="in">In:</label></td>
+				<td colspan="2"><select id="in"></select></td>
+			</tr>
+			<tr>
+				<td><label for="transpose">Transpose:</label></td>
+				<td><input type="range" id="transpose" min="-12" max="12" step="1" value="0" /></td>
+				<td><span id="semitones"></span></td>
+			</tr>
+			<tr>
+				<td><label for="out">Out:</label></td>
+				<td colspan="2"><select id="out"></select></td>
+			</tr>
+		</table>
+
+		<footer>
+			Another useless contraption by <a href="https://ondras.zarovi.cz/">Ondřej Žára</a>. <a href="https://github.com/ondras/midi-juggler">Source at GitHub</a>.
+		</footer>
+
+		<script>
+let input, output, transpose=0;
+
+function onMessage(e) {
+	if (!output) { return; }
+	if (e.data[0] <= 175) { e.data[1] += transpose; }
+	output.send(e.data);
+}
+
+function fill(s, ports) {
+	let node = document.querySelector(s);
+	node.innerHTML = "<option>(pick)</option>";
+	ports.forEach(port => {
+		let o = new Option(port.name, port.id);
+		node.appendChild(o);
+	});
+
+	node.addEventListener("change", e => {
+		let port = ports.get(node.value);
+		if (port.type == "input") {
+			input && input.removeEventListener("midimesage", onMessage);
+			input = port;
+			input.addEventListener("midimessage", onMessage);
+		}
+		if (port.type == "output") { output = port; }
+	});
+}
+
+
+async function init() {
+	let input = document.querySelector("#transpose");
+	let semitones = document.querySelector("#semitones");
+	function sync() {
+		transpose = input.valueAsNumber;
+		semitones.textContent = "";
+		if (transpose) { semitones.textContent = `${transpose > 0 ? "+" : ""}${transpose} semitone(s)`; }
+	}
+	sync();
+	input.addEventListener("input", sync);
+
+
+	let detect = document.querySelector("#detect");
+	try {
+		let access = await navigator.requestMIDIAccess();
+		detect.textContent = "(this one is fine)";
+		fill("#in", access.inputs);
+		fill("#out", access.outputs);
+	} catch (e) {
+		detect.textContent = "(this one does NOT)";
+	}
+}
+
+init();
+		</script>
+		</main>
+	</body>
+</html>
