@@ -28,7 +28,7 @@ li:last-child {
 table {
 	margin-top: 2em;
 	min-width: 600px;
-	max-width: 600px;
+	max-width: 800px;
 	border-collapse: collapse;
 }
 
@@ -42,6 +42,10 @@ tbody {
 
 td {
 	padding: 4px 2px;
+}
+
+td.inactive {
+	opacity: 0.5;
 }
 
 td:nth-child(1) { text-align: left; }
@@ -60,6 +64,7 @@ tbody tr:nth-child(even) {
 	background-color: #eee;
 }
 
+
 form {
 	display: flex;
 	flex-direction: column;
@@ -69,7 +74,7 @@ form {
 
 .message-types {
 	display: flex;
-	align-items: flex-start;
+	align-items: flex-end;
 }
 
 .message-types label { white-space: nowrap; }

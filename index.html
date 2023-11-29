@@ -16,8 +16,9 @@
 
 		<ol>
 			<li>Connect your MIDI input and output device(s)</li>
-			<li>(Re)load this page in a browser that supports <a href="https://caniuse.com/midi">Web MIDI</a> <span id="detect"></span></li>
+			<li>(Re)load this page in a browser that supports <a href="https://caniuse.com/midi">Web MIDI</a></li>
 			<li>Pick input and output devices from selectboxes below</li>
+			<li>Add the route and customize filtering/transposition</li>
 			<li>Play!</li>
 			<li>Profit!</li>
 		</ol>
@@ -28,11 +29,6 @@
 					<td><label>In: <select id="in"></select></label></td>
 					<td><button id="add">➕ Add new route</button></td>
 					<td><label>Out: <select id="out"></select></label></td>
-					<!--
-					<td><label for="transpose">Transpose:</label></td>
-					<td><input type="range" id="transpose" min="-12" max="12" step="1" value="0" /></td>
-					<td><span id="semitones"></span></td>
-					-->
 			</thead>
 			<tbody id="routes"></tbody>
 		</table>

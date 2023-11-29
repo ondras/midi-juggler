@@ -34,7 +34,7 @@ function formatPort(id, ports) {
 		if (port.manufacturer) { label = `${port.manufacturer} ${label}`; }
 		return label;
 	} else {
-		return id.substring(10);
+		return id.substring(0, 10);
 	}
 }
 
@@ -84,6 +84,9 @@ function syncRoute(route) {
 
 	row.cells[0].textContent = formatPort(route.inId, midiAccess.inputs);
 	row.cells[2].textContent = formatPort(route.outId, midiAccess.outputs);
+
+	row.cells[0].classList.toggle("inactive", !midiAccess.inputs.has(route.inId));
+	row.cells[2].classList.toggle("inactive", !midiAccess.outputs.has(route.outId));
 }
 
 function loadRoutes() {
@@ -201,12 +204,11 @@ syncAddEnabled();
 let detect = document.querySelector("#detect");
 try {
 	midiAccess = await navigator.requestMIDIAccess();
-	detect.textContent = "(this one is fine)";
 	midiAccess.addEventListener("statechange", _ => fillPorts());
 	fillPorts();
 	syncAddEnabled();
 	loadRoutes();
 } catch (e) {
 	console.warn(e);
-	detect.textContent = "(this one does NOT)";
+	alert("Your browser does not support Web MIDI");
 }
