@@ -1,30 +1,22 @@
+import * as form from "./form.js";
+
+
 let inSelect = document.querySelector("#in");
 let outSelect = document.querySelector("#out");
 let addButton = document.querySelector("#add");
 let tbody = document.querySelector("#routes");
-let template = document.querySelector("#route");
 let midiAccess = {
 	inputs: new Map(),
 	outputs: new Map()
 }
 
-const MESSAGE_TYPES = {
-	"8": "Note Off",
-	"9": "Note On",
-	"10": "Polyphonic Aftertouch",
-	"11": "Control Change",
-	"12": "Program Change",
-	"13": "Channel Aftertouch",
-	"14": "Pitch Bend"
-}
 
-let routes = [];
-
+const ACTIVE_SENSE = 15;
 const KEYFRAMES = [{backgroundColor:"lime"}, {backgroundColor:"transparent"}];
 const TIMING = {duration:300}
-function pulsePort(node) {
-	node.animate(KEYFRAMES, TIMING);
-}
+function pulsePort(node) { node.animate(KEYFRAMES, TIMING); }
+
+let routes = [];
 
 function formatPort(id, ports) {
 	if (ports.has(id)) {
@@ -42,7 +34,8 @@ function newRoute(inId, outId) {
 	return {
 		inId, outId,
 		transpose: 0,
-		messageTypes: null
+		messageTypes: null,
+		activeSense: false
 	}
 }
 
@@ -56,12 +49,15 @@ function processRoute(route, e) {
 	let row = tbody.rows[index];
 	pulsePort(row.cells[0]);
 
+	let mt = data[0] >> 4;
+
 	if (route.messageTypes) {
-		let mt = data[0] >> 4;
 		if (!route.messageTypes.includes(mt)) { return; }
 	}
 
-//	console.log("routing", route.inId, "->", route.outId);
+	if (mt == ACTIVE_SENSE && !route.activeSense) { return; }
+
+//	console.log("routing", route.inId, "->", route.outId, e);
 
 	pulsePort(row.cells[2]);
 
@@ -83,9 +79,18 @@ function syncRoute(route) {
 	let row = tbody.rows[index];
 
 	row.cells[0].textContent = formatPort(route.inId, midiAccess.inputs);
-	row.cells[2].textContent = formatPort(route.outId, midiAccess.outputs);
-
 	row.cells[0].classList.toggle("inactive", !midiAccess.inputs.has(route.inId));
+
+	let mt = (route.messageTypes ? route.messageTypes.join(", ") : "all");
+
+	let p = row.cells[1].querySelector("p");
+	p.innerHTML = `
+		Transpose: ${route.transpose > 0 ? "+" : ""}${route.transpose}<br/>
+		Message types: ${mt}<br/>
+		Active Sense: ${route.activeSense ? "yes" : "no"}
+	`;
+
+	row.cells[2].textContent = formatPort(route.outId, midiAccess.outputs);
 	row.cells[2].classList.toggle("inactive", !midiAccess.outputs.has(route.outId));
 }
 
@@ -110,57 +115,43 @@ function saveRoutes() {
 }
 
 function buildRoute(route) {
-	let content = template.content.cloneNode(true);
+	let row = document.createElement("tr");
+	row.insertCell();
+	let mid = row.insertCell();
+	row.insertCell();
 
-	let transpose = content.querySelector("[name=transpose]");
-	for (let t = 12; t>=-12; t--) {
-		let selected = (route.transpose == t);
-		let option = new Option(`${t > 0 ? "+" : ""}${t} semitone${t == 1 ? "" : "s"}`, t, selected, selected);
-		transpose.append(option);
-	}
-	transpose.onchange = _ => {
-		route.transpose = Number(transpose.value);
+	let p = document.createElement("p");
+
+	let edit = document.createElement("button");
+	edit.textContent = "Edit";
+	edit.onclick = async _ => {
+		let result = await form.editRoute(route);
+		if (!result) { return; }
+		syncRoute(route);
 		saveRoutes();
-	};
+	}
 
-	let del = content.querySelector("[name=delete]");
+	let del = document.createElement("button");
+	del.name = "delete";
+	del.textContent = "🞮";
 	del.onclick = _ => {
 		removeRoute(route);
 		saveRoutes();
 	}
 
-	let messageTypes = content.querySelector("[name=message-types]");
-	let options = Object.entries(MESSAGE_TYPES).map(([id, label]) => {
-		let selected = (route.messageTypes && route.messageTypes.includes(Number(id)));
-		return new Option(label, id, selected, selected);
-	});
-	function getSelectedMessageTypes() {
-		return options.filter(o => o.selected).map(o => Number(o.value));
-	}
-	messageTypes.append(...options);
-	messageTypes.size = options.length;
-	messageTypes.onchange = _ => {
-		route.messageTypes = getSelectedMessageTypes();
-		saveRoutes();
-	}
-	messageTypes.hidden = !route.messageTypes;
+	mid.append(p, edit, del);
 
-	let messageTypesMode = content.querySelector("[name=message-types-mode]");
-	messageTypesMode.onchange = _ => {
-		route.messageTypes = (messageTypesMode.value == "all" ? null : getSelectedMessageTypes());
-		messageTypes.hidden = !route.messageTypes;
-		saveRoutes();
-	}
-	messageTypesMode.value = (route.messageTypes ? "only" : "all");
-
-
-	return content;
+	return row;
 }
 
-function addRoute() {
+async function addRoute() {
 	let inId = inSelect.value;
 	let outId = outSelect.value;
 	let route = newRoute(inId, outId);
+
+	let result = await form.editRoute(route);
+	if (!result) { return; }
+
 	routes.push(route);
 
 	let node = buildRoute(route);
@@ -175,7 +166,6 @@ function removeRoute(route) {
 	routes.splice(index);
 	tbody.deleteRow(index);
 }
-
 
 function syncAddEnabled() {
 	addButton.disabled = (midiAccess.inputs.size == 0 || midiAccess.outputs.size == 0);
@@ -201,10 +191,10 @@ function fillPorts() {
 addButton.addEventListener("click", addRoute);
 syncAddEnabled();
 
-let detect = document.querySelector("#detect");
 try {
 	midiAccess = await navigator.requestMIDIAccess();
 	midiAccess.addEventListener("statechange", _ => fillPorts());
+	form.init();
 	fillPorts();
 	syncAddEnabled();
 	loadRoutes();

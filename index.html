@@ -5,61 +5,58 @@
 		<title>MIDI Juggler</title>
 		<link rel="icon" href="https://emojimage.deno.dev/🤹" />
 		<link rel="stylesheet" href="index.css" />
-		<style>
-
-		</style>
+		<meta name="viewport" content="width=device-width" />
 	</head>
 	<body>
 		<main>
-		<h1 title="MIDI Juggler">🎶🤹</h1>
-		<p>How to use:</p>
+			<h1 title="MIDI Juggler">🎶🤹</h1>
+			<p>How to use:</p>
 
-		<ol>
-			<li>Connect your MIDI input and output device(s)</li>
-			<li>(Re)load this page in a browser that supports <a href="https://caniuse.com/midi">Web MIDI</a></li>
-			<li>Pick input and output devices from selectboxes below</li>
-			<li>Add the route and customize filtering/transposition</li>
-			<li>Play!</li>
-			<li>Profit!</li>
-		</ol>
+			<ol>
+				<li>Connect your MIDI input and output device(s)</li>
+				<li>(Re)load this page in a browser that supports <a href="https://caniuse.com/midi">Web MIDI</a></li>
+				<li>Pick input and output devices from selectboxes below</li>
+				<li>Add the route and customize filtering/transposition</li>
+				<li>Play!</li>
+				<li>Profit!</li>
+			</ol>
 
-		<table>
-			<thead>
-				<tr>
-					<td><label>In: <select id="in"></select></label></td>
-					<td><button id="add">➕ Add new route</button></td>
-					<td><label>Out: <select id="out"></select></label></td>
-			</thead>
-			<tbody id="routes"></tbody>
-		</table>
+			<table>
+				<thead>
+					<tr>
+						<td><label>In: <select id="in"></select></label></td>
+						<td><button id="add">➕ New route</button></td>
+						<td><label>Out: <select id="out"></select></label></td>
+				</thead>
+				<tbody id="routes"></tbody>
+			</table>
 
-		<footer>
-			Another useless contraption by <a href="https://ondras.zarovi.cz/">Ondřej Žára</a>. <a href="https://github.com/ondras/midi-juggler">Source at GitHub</a>.
-		</footer>
+			<footer>
+				Another useless contraption by <a href="https://ondras.zarovi.cz/">Ondřej Žára</a>. <a href="https://github.com/ondras/midi-juggler">Source at GitHub</a>.
+			</footer>
+		</main>
 
-		<template id="route" hidden>
-			<tr>
-				<td></td>
-				<td>
-					<form>
-						<label>Transpose: <select name="transpose"></select></label>
-						<div class="message-types">
-							<label>Message types:
-								<select name="message-types-mode">
-									<option value="all">All</option>
-									<option value="only">Only</option>
-								</select>
-							</label>
-							<select multiple name="message-types"></select>
-						</div>
-						<button type="button" name="delete">❌</button>
-					</form>
-				</td>
-				<td></td>
-			</tr>
-		</template>
+		<dialog>
+			<form>
+				<label>Transpose: <select name="transpose"></select></label>
+				<hr>
+				<label>Message types:
+					<select name="message-types-mode">
+						<option value="all">All</option>
+						<option value="only">Only</option>
+					</select>
+				</label><br>
+				<select multiple name="message-types"></select>
+				<hr>
+				<label><input name="active-sense" type="checkbox">Active Sense forward</label>
+				<hr>
+				<footer>
+					<button type="button" name="cancel">Cancel</button>
+					<button type="submit">Submit</button>
+				</footer>
+			</form>
+		</dialog>
 
 		<script src="index.js" type="module"></script>
-		</main>
 	</body>
 </html>
