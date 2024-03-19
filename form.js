@@ -35,7 +35,7 @@ export async function editRoute(route) {
 	let transpose = form.querySelector("[name=transpose]");
 	let mtMode = form.querySelector("[name=message-types-mode]");
 	let mt = form.querySelector("[name=message-types]");
-	let activeSense = form.querySelector("[name=message-types]");
+	let activeSense = form.querySelector("[name=active-sense]");
 	let mtOptions = [...mt.options];
 
 	transpose.value = route.transpose;
